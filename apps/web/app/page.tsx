@@ -3,6 +3,7 @@ import Link from "next/link"
 import AuthButton from "@/components/auth-button"
 
 export default function Page() {
+
   return (
     <div className="flex items-center justify-center min-h-svh">
       <div className="flex flex-col items-center justify-center gap-6">
@@ -19,12 +20,6 @@ export default function Page() {
           </Link>
           <Link href="/market">
             <Button variant="outline">Market 페이지</Button>
-          </Link>
-          <Link href="/auth/login">
-            <Button variant="outline">로그인</Button>
-          </Link>
-          <Link href="/auth/signup">
-            <Button variant="outline">회원가입</Button>
           </Link>
         </div>
       </div>

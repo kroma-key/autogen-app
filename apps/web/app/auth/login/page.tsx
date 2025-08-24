@@ -1,69 +1,75 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import Link from "next/link"
-import { createClient } from '@/lib/supabase/supabase'
-import { useRouter } from 'next/navigation'
-import { getAuthRedirectUrl } from '@/lib/supabase/auth-helpers'
+import { useState } from "react";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/supabase";
+import { useRouter } from "next/navigation";
+import { getAuthRedirectUrl } from "@/lib/supabase/auth-helpers";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-  const supabase = createClient()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       } else {
-        router.push('/')
-        router.refresh()
+        router.push("/");
+        router.refresh();
       }
-    } catch (err) {
-      setError('로그인 중 오류가 발생했습니다.')
+    } catch {
+      setError("로그인 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleLogin = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: getAuthRedirectUrl()
-        }
-      })
+          redirectTo: getAuthRedirectUrl(),
+        },
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       }
-    } catch (err) {
-      setError('Google 로그인 중 오류가 발생했습니다.')
+    } catch {
+      setError("Google 로그인 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-svh p-4">
@@ -103,10 +109,10 @@ export default function LoginPage() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '로그인 중...' : '로그인'}
+              {loading ? "로그인 중..." : "로그인"}
             </Button>
           </form>
-          
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -129,7 +135,7 @@ export default function LoginPage() {
           </Button>
 
           <div className="text-center text-sm">
-            계정이 없으신가요?{' '}
+            계정이 없으신가요?{" "}
             <Link href="/auth/signup" className="underline">
               회원가입
             </Link>
@@ -137,5 +143,5 @@ export default function LoginPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,41 +1,47 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from "@workspace/ui/components/button"
-import { Input } from "@workspace/ui/components/input"
-import { Label } from "@workspace/ui/components/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@workspace/ui/components/card"
-import { Alert, AlertDescription } from "@workspace/ui/components/alert"
-import Link from "next/link"
-import { createClient } from '@/lib/supabase/supabase'
-import { useRouter } from 'next/navigation'
-import { getAuthRedirectUrl } from '@/lib/supabase/auth-helpers'
+import { useState } from "react";
+import { Button } from "@workspace/ui/components/button";
+import { Input } from "@workspace/ui/components/input";
+import { Label } from "@workspace/ui/components/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@workspace/ui/components/card";
+import { Alert, AlertDescription } from "@workspace/ui/components/alert";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/supabase";
+import { useRouter } from "next/navigation";
+import { getAuthRedirectUrl } from "@/lib/supabase/auth-helpers";
 
 export default function SignupPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     if (password !== confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다.')
-      setLoading(false)
-      return
+      setError("비밀번호가 일치하지 않습니다.");
+      setLoading(false);
+      return;
     }
 
     if (password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다.')
-      setLoading(false)
-      return
+      setError("비밀번호는 최소 6자 이상이어야 합니다.");
+      setLoading(false);
+      return;
     }
 
     try {
@@ -43,43 +49,43 @@ export default function SignupPage() {
         email,
         password,
         options: {
-          emailRedirectTo: getAuthRedirectUrl()
-        }
-      })
+          emailRedirectTo: getAuthRedirectUrl(),
+        },
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       } else {
-        setSuccess(true)
+        setSuccess(true);
       }
-    } catch (err) {
-      setError('회원가입 중 오류가 발생했습니다.')
+    } catch {
+      setError("회원가입 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignup = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
-          redirectTo: getAuthRedirectUrl()
-        }
-      })
+          redirectTo: getAuthRedirectUrl(),
+        },
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       }
-    } catch (err) {
-      setError('Google 회원가입 중 오류가 발생했습니다.')
+    } catch {
+      setError("Google 회원가입 중 오류가 발생했습니다.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (success) {
     return (
@@ -94,19 +100,20 @@ export default function SignupPage() {
           <CardContent className="space-y-4">
             <Alert>
               <AlertDescription>
-                이메일 주소로 확인 링크를 보냈습니다. 이메일을 확인하여 계정을 활성화해주세요.
+                이메일 주소로 확인 링크를 보냈습니다. 이메일을 확인하여 계정을
+                활성화해주세요.
               </AlertDescription>
             </Alert>
-            <Button 
-              className="w-full" 
-              onClick={() => router.push('/auth/login')}
+            <Button
+              className="w-full"
+              onClick={() => router.push("/auth/login")}
             >
               로그인 페이지로 이동
             </Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -157,10 +164,10 @@ export default function SignupPage() {
               </Alert>
             )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '회원가입 중...' : '회원가입'}
+              {loading ? "회원가입 중..." : "회원가입"}
             </Button>
           </form>
-          
+
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full border-t" />
@@ -183,7 +190,7 @@ export default function SignupPage() {
           </Button>
 
           <div className="text-center text-sm">
-            이미 계정이 있으신가요?{' '}
+            이미 계정이 있으신가요?{" "}
             <Link href="/auth/login" className="underline">
               로그인
             </Link>
@@ -191,5 +198,5 @@ export default function SignupPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
