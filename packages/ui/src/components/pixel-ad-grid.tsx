@@ -63,6 +63,7 @@ export function PixelAdGrid({
   const handleAdClick = useCallback(
     (ad: PixelAd) => {
       setSelectedAd(ad);
+
       if (onAdClick) {
         onAdClick(ad);
       }
@@ -256,6 +257,12 @@ export function PixelAdGridInfo({
         {selectedAd.url && (
           <div>
             <span className="font-medium">URL:</span> {selectedAd.url}
+          </div>
+        )}
+        {selectedAd.mediaUrl && (
+          <div>
+            <span className="font-medium">미디어:</span> {selectedAd.mediaType}{" "}
+            - {selectedAd.mediaUrl}
           </div>
         )}
       </div>
