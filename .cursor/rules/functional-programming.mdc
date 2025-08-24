@@ -1,6 +1,7 @@
 ---
 alwaysApply: false
 ---
+
 # 함수형 프로그래밍 및 가독성 우선 규칙
 
 ## 적용 대상 파일들
@@ -16,6 +17,18 @@ alwaysApply: false
 - **FxTS 공식 사이트**: [https://fxts.dev/](https://fxts.dev/)
 - `pipe`, `map`, `filter`, `take`, `toArray` 등의 함수형 API를 적극 활용
 - 함수형 컴포지션을 사용하여 선언적이고 읽기 쉬운 코드 작성
+
+```ts
+import { filter, map, pipe, range, reduce, take } from "@fxts/core";
+
+const sum = pipe(
+  range(Infinity),
+  filter((a) => a % 5 === 0),
+  map((a) => a * 10),
+  take(10),
+  reduce((a, b) => a + b)
+); // typeof 'sum' inferred as the number
+```
 
 ### 2. 타입 안전성 및 Optional Chaining 제거
 
@@ -115,6 +128,7 @@ export const isValidEmail = (email: string): boolean => {
 - `useMemo`와 `useCallback`을 적절히 사용하여 불필요한 재계산 방지
 - 함수형 프로그래밍의 지연 평가(lazy evaluation)를 활용하여 효율적인 계산 구현
 - 메모이제이션을 통한 계산 결과 재사용
+
 # 함수형 프로그래밍 및 가독성 우선 규칙
 
 ## 적용 대상 파일들

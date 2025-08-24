@@ -12,6 +12,7 @@ import {
   IconUsers,
   IconLogout,
   IconUser,
+  IconHome,
 } from "@tabler/icons-react";
 import { useAuth, useUserProfile } from "@/hooks/supabase";
 
@@ -48,6 +49,11 @@ const data = {
     avatar: "/avatars/user.jpg",
   },
   navMain: [
+    {
+      title: "홈",
+      url: "/market",
+      icon: IconHome,
+    },
     {
       title: "내 광고 관리",
       url: "/market/my-ads",
