@@ -336,6 +336,10 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   );
 }
 
+/**
+ * @deprecated
+ * @returns
+ */
 export function DataTable({
   data: initialData,
 }: {
