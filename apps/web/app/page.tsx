@@ -1,15 +1,27 @@
-import { Button } from "@workspace/ui/components/button"
-import Link from "next/link"
-import AuthButton from "@/components/auth-button"
+"use client";
+
+import { Button } from "@workspace/ui/components/button";
+import Link from "next/link";
+import AuthButton from "@/components/auth-button";
+import { useAuth } from "@/hooks/supabase";
 
 export default function Page() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-svh">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-svh">
       <div className="flex flex-col items-center justify-center gap-6">
         <h1 className="text-2xl font-bold">Hello World</h1>
         <p className="text-gray-600">Next.js App Router 예시</p>
-        
+
         <AuthButton />
         <div className="flex flex-col gap-2">
           <Link href="/about">
@@ -18,11 +30,17 @@ export default function Page() {
           <Link href="/blog">
             <Button variant="outline">블로그 목록</Button>
           </Link>
-          <Link href="/market">
-            <Button variant="outline">Market 페이지</Button>
-          </Link>
+          {user ? (
+            <Link href="/market">
+              <Button variant="outline">Market 페이지</Button>
+            </Link>
+          ) : (
+            <Link href="/auth/login">
+              <Button variant="outline">로그인하여 Market 접근</Button>
+            </Link>
+          )}
         </div>
       </div>
     </div>
-  )
+  );
 }

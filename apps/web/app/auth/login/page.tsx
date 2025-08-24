@@ -29,7 +29,10 @@ export default function LoginPage() {
 
     const success = await signInWithPassword(email, password);
     if (success) {
-      router.push("/");
+      // Redirect to the original page or home page
+      const redirectPath = sessionStorage.getItem("redirectAfterLogin") || "/";
+      sessionStorage.removeItem("redirectAfterLogin");
+      router.push(redirectPath);
       router.refresh();
     }
   };
