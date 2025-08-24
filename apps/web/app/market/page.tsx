@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import {
-  PixelAdGrid,
-  createAd,
-  PRESET_LAYOUTS,
-  type PixelAd,
-} from "@workspace/ui";
+import { PixelAdGrid, createAd, type PixelAd } from "@workspace/ui";
 import { env } from "@/lib/env/client";
 import {
   Dialog,
@@ -19,32 +14,11 @@ import {
 import { Button } from "@workspace/ui/components/button";
 import { Info } from "lucide-react";
 
-// 타입 정의
-interface ScreenSize {
-  width: number;
-  height: number;
-}
-
-interface GridConfig {
-  cellSize: number;
-  gridWidth: number;
-  gridHeight: number;
-  actualWidth: number;
-  actualHeight: number;
-}
-
-interface AdPlacement {
-  type: keyof typeof PRESET_LAYOUTS;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  content?: string;
-  url?: string;
-}
-
 // 순수 함수들
-const calculateOptimalCellSize = (screenSize: ScreenSize): number => {
+const calculateOptimalCellSize = (screenSize: {
+  width: number;
+  height: number;
+}): number => {
   const minCellSize = 20;
   const maxCellSize = 100;
   const optimalSize = Math.floor(
@@ -54,7 +28,7 @@ const calculateOptimalCellSize = (screenSize: ScreenSize): number => {
 };
 
 const calculateGridDimensions = (
-  screenSize: ScreenSize,
+  screenSize: { width: number; height: number },
   cellSize: number
 ): { width: number; height: number } => {
   const gridWidth = Math.floor((screenSize.width * 0.8) / cellSize);
@@ -62,7 +36,16 @@ const calculateGridDimensions = (
   return { width: gridWidth, height: gridHeight };
 };
 
-const createGridConfig = (screenSize: ScreenSize): GridConfig => {
+const createGridConfig = (screenSize: {
+  width: number;
+  height: number;
+}): {
+  cellSize: number;
+  gridWidth: number;
+  gridHeight: number;
+  actualWidth: number;
+  actualHeight: number;
+} => {
   const cellSize = calculateOptimalCellSize(screenSize);
   const { width: gridWidth, height: gridHeight } = calculateGridDimensions(
     screenSize,
@@ -78,7 +61,20 @@ const createGridConfig = (screenSize: ScreenSize): GridConfig => {
   };
 };
 
-const createAdPlacements = (gridConfig: GridConfig): AdPlacement[] => {
+const createAdPlacements = (gridConfig: {
+  cellSize: number;
+  gridWidth: number;
+  gridHeight: number;
+  actualWidth: number;
+  actualHeight: number;
+}): readonly {
+  type: "hero" | "cluster" | "showcase" | "topAds" | "newStore";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  content?: string;
+}[] => {
   const { cellSize, gridWidth, gridHeight } = gridConfig;
 
   return [
@@ -125,69 +121,70 @@ const createAdPlacements = (gridConfig: GridConfig): AdPlacement[] => {
       height: Math.floor(gridWidth * 0.08) * cellSize,
       content: "LOGO",
     },
-  ];
+  ] as const;
 };
 
-const generateAdsFromPlacements = (placements: AdPlacement[]): PixelAd[] => {
-  const ads: PixelAd[] = [];
+const generateAdsFromPlacements = (
+  placements: readonly {
+    type: "hero" | "cluster" | "showcase" | "topAds" | "newStore";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    content?: string;
+  }[]
+): PixelAd[] => {
+  return placements
+    .map((placement) => {
+      const { type, x, y, width, height, content } = placement;
 
-  placements.forEach((placement) => {
-    const { type, x, y, width, height, content, url } = placement;
-
-    if (type === "hero") {
-      ads.push(createAd("ad", x, y, width, height, content));
-    }
-
-    if (type === "cluster") {
-      const clusterSize = Math.floor(width / 2);
-      ads.push(
-        createAd("ad", x, y, clusterSize, clusterSize, "AD"),
-        createAd(
-          "brand",
-          x + clusterSize,
-          y,
-          clusterSize,
-          clusterSize,
-          "브랜드"
-        ),
-        createAd(
-          "product",
-          x,
-          y + clusterSize,
-          clusterSize,
-          clusterSize,
-          "상품"
-        ),
-        createAd(
-          "discount",
-          x + clusterSize,
-          y + clusterSize,
-          clusterSize,
-          clusterSize,
-          "할인"
-        )
-      );
-    }
-
-    if (type === "showcase") {
-      ads.push(createAd("ad", x, y, width, height, content));
-    }
-
-    if (type === "topAds") {
-      const adWidth = Math.floor(width / 5);
-      for (let i = 0; i < 5; i++) {
-        ads.push(
-          createAd("ad", x + i * adWidth, y, adWidth, height, `광고 ${i + 1}`)
-        );
+      switch (type) {
+        case "hero":
+          return createAd("ad", x, y, width, height, content);
+        case "cluster":
+          const clusterSize = Math.floor(width / 2);
+          return [
+            createAd("ad", x, y, clusterSize, clusterSize, "AD"),
+            createAd(
+              "brand",
+              x + clusterSize,
+              y,
+              clusterSize,
+              clusterSize,
+              "브랜드"
+            ),
+            createAd(
+              "product",
+              x,
+              y + clusterSize,
+              clusterSize,
+              clusterSize,
+              "상품"
+            ),
+            createAd(
+              "discount",
+              x + clusterSize,
+              y + clusterSize,
+              clusterSize,
+              clusterSize,
+              "할인"
+            ),
+          ];
+        case "showcase":
+          return createAd("ad", x, y, width, height, content);
+        case "topAds":
+          const adWidth = Math.floor(width / 5);
+          return Array.from({ length: 5 }, (_, i) =>
+            createAd("ad", x + i * adWidth, y, adWidth, height, `광고 ${i + 1}`)
+          );
+        case "newStore":
+          return createAd("logo", x, y, width, height, content);
+        default:
+          // 타입 안전성을 위한 exhaustive check
+          return [];
       }
-    }
-
-    if (type === "newStore") {
-      ads.push(createAd("logo", x, y, width, height, content));
-    }
-  });
-
-  return ads;
+    })
+    .flat();
 };
 
 const calculateComputedHeight = (): number => {
@@ -209,7 +206,10 @@ const calculateComputedHeight = (): number => {
 };
 
 export default function PixelMarket() {
-  const [screenSize, setScreenSize] = useState<ScreenSize>({
+  const [screenSize, setScreenSize] = useState<{
+    width: number;
+    height: number;
+  }>({
     width: 1920,
     height: 1080,
   });

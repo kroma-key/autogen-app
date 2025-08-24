@@ -17,6 +17,51 @@ export interface PixelAd {
   mediaType?: "image" | "video" | "gif"; // 미디어 타입
 }
 
+// 타입 안전성을 위한 유틸리티 타입들
+export type ImageAd = PixelAd & { mediaType: "image"; mediaUrl: string };
+export type VideoAd = PixelAd & { mediaType: "video"; mediaUrl: string };
+export type GifAd = PixelAd & { mediaType: "gif"; mediaUrl: string };
+export type TextAd = PixelAd & { mediaUrl?: never; mediaType?: never };
+
+// 타입 안전성을 위한 타입 가드 함수들
+export function isImageAd(ad: PixelAd): ad is ImageAd {
+  return ad.mediaType === "image";
+}
+
+export function isVideoAd(ad: PixelAd): ad is VideoAd {
+  return ad.mediaType === "video";
+}
+
+export function isGifAd(ad: PixelAd): ad is GifAd {
+  return ad.mediaType === "gif";
+}
+
+export function isMediaAd(ad: PixelAd): ad is ImageAd | VideoAd | GifAd {
+  return Boolean(ad.mediaUrl && ad.mediaType);
+}
+
+export function isTextAd(ad: PixelAd): ad is TextAd {
+  return !ad.mediaUrl && !ad.mediaType;
+}
+
+// 광고 타입별로 분류하는 유틸리티 함수
+export function filterAdsByType<T extends PixelAd["type"]>(
+  ads: PixelAd[],
+  type: T
+): Extract<PixelAd, { type: T }>[] {
+  return ads.filter(
+    (ad): ad is Extract<PixelAd, { type: T }> => ad.type === type
+  );
+}
+
+export function filterMediaAds(ads: PixelAd[]): (ImageAd | VideoAd | GifAd)[] {
+  return ads.filter(isMediaAd);
+}
+
+export function filterTextAds(ads: PixelAd[]): TextAd[] {
+  return ads.filter(isTextAd);
+}
+
 interface PixelAdCanvasProps {
   ads: PixelAd[];
   canvasWidth: number;
@@ -31,7 +76,6 @@ interface PixelAdCanvasProps {
 export function PixelAdCanvas({
   ads,
   canvasWidth,
-  canvasHeight,
   containerHeight,
   onAdClick,
   className = "",
@@ -66,8 +110,8 @@ export function PixelAdCanvas({
   };
 
   const renderAdContent = (ad: PixelAd) => {
-    if (ad.mediaUrl && ad.mediaType) {
-      if (ad.mediaType === "video") {
+    if (isMediaAd(ad)) {
+      if (isVideoAd(ad)) {
         return (
           <>
             <video
@@ -94,7 +138,7 @@ export function PixelAdCanvas({
             </div>
           </>
         );
-      } else if (ad.mediaType === "gif") {
+      } else if (isGifAd(ad)) {
         return (
           <>
             <img
@@ -126,7 +170,7 @@ export function PixelAdCanvas({
           </>
         );
       } else {
-        // 이미지 타입
+        // 이미지 타입 (isImageAd)
         return (
           <>
             <img
@@ -160,7 +204,7 @@ export function PixelAdCanvas({
       }
     }
 
-    // Fallback: 텍스트 기반 광고
+    // Fallback: 텍스트 기반 광고 (isTextAd)
     return (
       <div
         className="w-full h-full flex items-center justify-center text-center font-bold transition-all duration-200 hover:ring-2 hover:ring-black/30"

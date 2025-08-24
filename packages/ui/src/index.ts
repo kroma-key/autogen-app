@@ -2,7 +2,22 @@
 export { useIsMobile } from "./hooks/use-mobile";
 
 // Pixel Ad Components
-export { PixelAdCanvas, type PixelAd } from "./components/pixel-ad-canvas";
+export {
+  PixelAdCanvas,
+  type PixelAd,
+  type ImageAd,
+  type VideoAd,
+  type GifAd,
+  type TextAd,
+  isImageAd,
+  isVideoAd,
+  isGifAd,
+  isMediaAd,
+  isTextAd,
+  filterAdsByType,
+  filterMediaAds,
+  filterTextAds,
+} from "./components/pixel-ad-canvas";
 export { PixelAdGrid } from "./components/pixel-ad-grid";
 export {
   PixelAdGridControls,

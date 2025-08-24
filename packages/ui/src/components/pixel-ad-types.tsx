@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { PixelAd } from "./pixel-ad-canvas";
 
 // 광고 타입별 색상 및 스타일 정의

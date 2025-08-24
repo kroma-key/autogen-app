@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { User } from "@supabase/supabase-js";
 import { useAuth } from "./use-auth";
 
 export interface UserProfile {

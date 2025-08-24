@@ -65,7 +65,7 @@ export function useAuth(): UseAuthReturn {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_, session) => {
       setUser(session?.user ?? null);
       setSession(session);
       setLoading(false);

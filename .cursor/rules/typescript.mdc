@@ -1,0 +1,542 @@
+# TypeScript 타입 안전성 가이드
+
+## 개요
+
+이 문서는 TypeScript 프로젝트에서 타입 안전성을 극대화하기 위한 설정과 패턴을 다룹니다. [TS Belt 설정 가이드](https://mobily.github.io/ts-belt/docs/getting-started/config)를 기반으로 하며, 고급 타입 시스템을 활용한 안전한 코드 작성을 목표로 합니다.
+
+## 핵심 TypeScript 설정
+
+### 필수 컴파일러 옵션
+
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+#### 설정 설명
+
+- **`strict: true`**: 모든 엄격한 타입 검사 옵션을 활성화
+- **`strictNullChecks: true`**: null과 undefined를 명시적으로 처리하도록 강제
+- **`noUncheckedIndexedAccess: true`**: 배열/객체 인덱스 접근 시 undefined 가능성 고려
+
+### 추가 권장 옵션
+
+```json
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
+```
+
+## 고급 타입 안전성 패턴
+
+### 1. Tagged Union (Discriminated Union)
+
+타입을 구분할 수 있는 공통 속성을 가진 유니온 타입입니다.
+
+#### 기본 패턴
+
+```typescript
+// ❌ Bad: 타입 구분이 어려운 유니온
+type Shape = { width: number; height: number } | { radius: number };
+
+// ✅ Good: 태그로 구분되는 유니온
+type Shape =
+  | { type: "rectangle"; width: number; height: number }
+  | { type: "circle"; radius: number };
+
+// 사용 예시
+function getArea(shape: Shape): number {
+  switch (shape.type) {
+    case "rectangle":
+      return shape.width * shape.height; // 타입 안전!
+    case "circle":
+      return Math.PI * shape.radius ** 2; // 타입 안전!
+  }
+}
+```
+
+#### 광고 시스템에 적용
+
+```typescript
+// 광고 타입을 태그로 구분
+type PixelAd =
+  | { type: "image"; mediaUrl: string; alt: string }
+  | { type: "video"; mediaUrl: string; poster?: string }
+  | { type: "gif"; mediaUrl: string; alt: string }
+  | { type: "text"; content: string; color: string };
+
+// 타입 안전한 처리
+function renderAd(ad: PixelAd): JSX.Element {
+  switch (ad.type) {
+    case "image":
+      return <img src={ad.mediaUrl} alt={ad.alt} />;
+    case "video":
+      return <video src={ad.mediaUrl} poster={ad.poster} />;
+    case "gif":
+      return <img src={ad.mediaUrl} alt={ad.alt} />;
+    case "text":
+      return <div style={{ color: ad.color }}>{ad.content}</div>;
+  }
+}
+```
+
+### 2. Branded Types
+
+타입을 더 구체적으로 구분하기 위한 패턴입니다.
+
+#### 기본 개념
+
+```typescript
+// ❌ Bad: 일반 string 타입
+type UserId = string;
+type ProductId = string;
+
+function getUser(id: UserId) {
+  /* ... */
+}
+function getProduct(id: ProductId) {
+  /* ... */
+}
+
+// 문제: 서로 다른 ID 타입을 혼용할 수 있음
+const userId: UserId = "user_123";
+const productId: ProductId = "prod_456";
+
+getUser(productId); // 컴파일 에러가 발생하지 않음!
+
+// ✅ Good: Branded Types 사용
+type UserId = string & { readonly __brand: unique symbol };
+type ProductId = string & { readonly __brand: unique symbol };
+
+// 타입 안전성 보장
+const userId: UserId = "user_123" as UserId;
+const productId: ProductId = "prod_456" as ProductId;
+
+getUser(productId); // 컴파일 에러! 타입 불일치
+```
+
+#### 팩토리 함수로 안전한 생성
+
+```typescript
+// 타입 안전한 ID 생성
+function createUserId(id: string): UserId {
+  if (!id.startsWith("user_")) {
+    throw new Error("Invalid user ID format");
+  }
+  return id as UserId;
+}
+
+function createProductId(id: string): ProductId {
+  if (!id.startsWith("prod_")) {
+    throw new Error("Invalid product ID format");
+  }
+  return id as ProductId;
+}
+
+// 사용 예시
+const userId = createUserId("user_123"); // UserId 타입
+const productId = createProductId("prod_456"); // ProductId 타입
+```
+
+### 3. Type Guards와 유틸리티 타입
+
+#### 타입 가드 함수
+
+```typescript
+// 타입 가드 함수 정의
+function isImageAd(ad: PixelAd): ad is ImageAd {
+  return ad.mediaType === "image";
+}
+
+function isVideoAd(ad: PixelAd): ad is VideoAd {
+  return ad.mediaType === "video";
+}
+
+function isMediaAd(ad: PixelAd): ad is ImageAd | VideoAd | GifAd {
+  return Boolean(ad.mediaUrl && ad.mediaType);
+}
+
+// 사용 예시
+function renderAd(ad: PixelAd): JSX.Element {
+  if (isImageAd(ad)) {
+    // 여기서 ad는 ImageAd 타입으로 추론됨
+    return <img src={ad.mediaUrl} alt={ad.alt} />;
+  }
+
+  if (isVideoAd(ad)) {
+    // 여기서 ad는 VideoAd 타입으로 추론됨
+    return <video src={ad.mediaUrl} poster={ad.poster} />;
+  }
+
+  // fallback
+  return <div>{ad.content}</div>;
+}
+```
+
+#### 유틸리티 타입
+
+```typescript
+// 광고 타입별로 분류하는 유틸리티 함수
+export function filterAdsByType<T extends PixelAd["type"]>(
+  ads: PixelAd[],
+  type: T
+): Extract<PixelAd, { type: T }>[] {
+  return ads.filter(
+    (ad): ad is Extract<PixelAd, { type: T }> => ad.type === type
+  );
+}
+
+export function filterMediaAds(ads: PixelAd[]): (ImageAd | VideoAd | GifAd)[] {
+  return ads.filter(isMediaAd);
+}
+
+export function filterTextAds(ads: PixelAd[]): TextAd[] {
+  return ads.filter(isTextAd);
+}
+
+// 사용 예시
+const imageAds = filterAdsByType(ads, "image"); // ImageAd[]
+const mediaAds = filterMediaAds(ads); // (ImageAd | VideoAd | GifAd)[]
+const textAds = filterTextAds(ads); // TextAd[]
+```
+
+### 4. Const Assertions와 Literal Types
+
+#### Const Assertions
+
+```typescript
+// ❌ Bad: 일반 배열
+const colors = ["red", "green", "blue"];
+// 타입: string[]
+
+// ✅ Good: Const Assertion
+const colors = ["red", "green", "blue"] as const;
+// 타입: readonly ["red", "green", "blue"]
+
+// 더 구체적인 타입
+type Color = (typeof colors)[number]; // "red" | "green" | "blue"
+
+// 함수에서 타입 안전성
+function isPrimaryColor(color: Color): boolean {
+  return color === "red" || color === "blue";
+}
+```
+
+#### 광고 시스템에 적용
+
+```typescript
+// 광고 타입을 const assertion으로 정의
+const AD_TYPES = [
+  "ad",
+  "brand",
+  "product",
+  "discount",
+  "logo",
+  "shop",
+] as const;
+type AdType = (typeof AD_TYPES)[number];
+
+// 타입 안전한 광고 생성
+function createAd(type: AdType, content: string): PixelAd {
+  // type은 정확한 리터럴 타입으로 추론됨
+  return {
+    id: generateId(),
+    type,
+    content,
+    // ... 기타 속성들
+  };
+}
+
+// 컴파일 타임에 타입 검증
+createAd("ad", "광고"); // ✅ OK
+createAd("invalid", "잘못된 타입"); // ❌ 컴파일 에러!
+```
+
+### 5. Conditional Types와 Mapped Types
+
+#### Conditional Types
+
+```typescript
+// 조건부 타입 정의
+type NonNullable<T> = T extends null | undefined ? never : T;
+type Extract<T, U> = T extends U ? T : never;
+type Exclude<T, U> = T extends U ? never : T;
+
+// 광고 시스템에 적용
+type MediaAd = Extract<PixelAd, { mediaUrl: string }>;
+type TextAd = Exclude<PixelAd, { mediaUrl: string }>;
+
+// 조건부 타입으로 광고 렌더링 함수 타입 정의
+type RenderFunction<T extends PixelAd> = T extends { mediaUrl: string }
+  ? (ad: T) => JSX.Element
+  : (ad: T) => JSX.Element;
+```
+
+#### Mapped Types
+
+```typescript
+// 기존 타입을 변환
+type Readonly<T> = {
+  readonly [P in keyof T]: T[P];
+};
+
+type Partial<T> = {
+  [P in keyof T]?: T[P];
+};
+
+type Required<T> = {
+  [P in keyof T]-?: T[P];
+};
+
+// 광고 시스템에 적용
+type ReadonlyPixelAd = Readonly<PixelAd>;
+type PartialPixelAd = Partial<PixelAd>;
+type RequiredPixelAd = Required<PixelAd>;
+```
+
+### 6. Template Literal Types
+
+#### 기본 사용법
+
+```typescript
+// 문자열 패턴을 타입으로 정의
+type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+type ApiEndpoint = `/api/${string}`;
+type FullUrl = `https://${string}.com${ApiEndpoint}`;
+
+// 광고 시스템에 적용
+type AdUrl = `https://${string}.com/ad/${string}`;
+type ImageUrl = `https://images.unsplash.com/photo-${string}`;
+type VideoUrl = `https://player.vimeo.com/external/${string}`;
+
+// 타입 안전한 URL 생성
+function createAdUrl(domain: string, adId: string): AdUrl {
+  return `https://${domain}.com/ad/${adId}` as AdUrl;
+}
+```
+
+### 7. Utility Types 활용
+
+#### 기본 Utility Types
+
+```typescript
+// Pick: 특정 속성만 선택
+type AdBasicInfo = Pick<PixelAd, "id" | "type" | "content">;
+
+// Omit: 특정 속성을 제외
+type AdWithoutId = Omit<PixelAd, "id">;
+
+// Record: 키-값 타입 정의
+type AdTypeConfig = Record<AdType, { color: string; label: string }>;
+
+// ReturnType: 함수 반환 타입 추출
+type AdRenderer = ReturnType<typeof createAdRenderer>;
+
+// Parameters: 함수 매개변수 타입 추출
+type CreateAdParams = Parameters<typeof createAd>;
+```
+
+#### 커스텀 Utility Types
+
+```typescript
+// 광고 시스템 전용 유틸리티 타입
+type MediaAd = Extract<PixelAd, { mediaUrl: string }>;
+type TextAd = Exclude<PixelAd, { mediaUrl: string }>;
+
+type AdWithUrl = Extract<PixelAd, { url: string }>;
+type AdWithoutUrl = Exclude<PixelAd, { url: string }>;
+
+// 조건부 타입으로 광고 분류
+type AdByType<T extends AdType> = Extract<PixelAd, { type: T }>;
+type ImageAd = AdByType<"image">;
+type VideoAd = AdByType<"video">;
+```
+
+## 실제 적용 예시
+
+### 광고 시스템 타입 안전성 개선
+
+```typescript
+// 1. Branded Types로 ID 안전성 확보
+type AdId = string & { readonly __brand: "AdId" };
+type CampaignId = string & { readonly __brand: "CampaignId" };
+
+// 2. Tagged Union으로 광고 타입 구분
+type PixelAd =
+  | { type: "image"; id: AdId; mediaUrl: string; alt: string }
+  | { type: "video"; id: AdId; mediaUrl: string; poster?: string }
+  | { type: "gif"; id: AdId; mediaUrl: string; alt: string }
+  | { type: "text"; id: AdId; content: string; color: string };
+
+// 3. Const Assertions로 상수 타입 정의
+const AD_TYPES = ["image", "video", "gif", "text"] as const;
+type AdType = typeof AD_TYPES[number];
+
+// 4. 타입 안전한 팩토리 함수
+function createImageAd(id: string, mediaUrl: string, alt: string): Extract<PixelAd, { type: "image" }> {
+  return {
+    type: "image",
+    id: createAdId(id),
+    mediaUrl,
+    alt
+  };
+}
+
+// 5. 타입 가드 함수
+function isImageAd(ad: PixelAd): ad is Extract<PixelAd, { type: "image" }> {
+  return ad.type === "image";
+}
+
+// 6. 타입 안전한 렌더링
+function renderAd(ad: PixelAd): JSX.Element {
+  if (isImageAd(ad)) {
+    return <img src={ad.mediaUrl} alt={ad.alt} />; // ad.alt 접근 가능
+  }
+
+  switch (ad.type) {
+    case "video":
+      return <video src={ad.mediaUrl} poster={ad.poster} />;
+    case "gif":
+      return <img src={ad.mediaUrl} alt={ad.alt} />;
+    case "text":
+      return <div style={{ color: ad.color }}>{ad.content}</div>;
+  }
+}
+```
+
+## 타입 안전성 검증
+
+### 컴파일 타임 검증
+
+```typescript
+// 타입 안전성 테스트
+function testTypeSafety() {
+  // ✅ 올바른 사용
+  const imageAd = createImageAd(
+    "ad_1",
+    "https://example.com/image.jpg",
+    "이미지"
+  );
+  renderAd(imageAd); // 타입 안전
+
+  // ❌ 잘못된 사용 (컴파일 에러)
+  const invalidAd = {
+    type: "invalid" as AdType, // 컴파일 에러!
+    id: "ad_2",
+    content: "잘못된 광고",
+  };
+
+  // ❌ 타입 불일치 (컴파일 에러)
+  const userId: UserId = "user_123" as UserId;
+  const adId: AdId = userId; // 컴파일 에러!
+}
+```
+
+### 런타임 검증
+
+```typescript
+// 런타임 타입 검증
+function validateAd(ad: unknown): ad is PixelAd {
+  if (typeof ad !== "object" || ad === null) return false;
+
+  const obj = ad as Record<string, unknown>;
+
+  if (!AD_TYPES.includes(obj.type as AdType)) return false;
+  if (typeof obj.id !== "string") return false;
+
+  // 타입별 추가 검증
+  switch (obj.type) {
+    case "image":
+    case "gif":
+      return typeof obj.mediaUrl === "string" && typeof obj.alt === "string";
+    case "video":
+      return typeof obj.mediaUrl === "string";
+    case "text":
+      return typeof obj.content === "string" && typeof obj.color === "string";
+    default:
+      return false;
+  }
+}
+```
+
+## 프로젝트 설정
+
+### TypeScript 설정
+
+```json
+// packages/typescript-config/base.json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitAny": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
+```
+
+### Turbo 설정
+
+```json
+// turbo.json
+{
+  "tasks": {
+    "type-check": {
+      "dependsOn": ["^type-check"]
+    }
+  }
+}
+```
+
+### Package.json 스크립트
+
+```json
+// 각 패키지의 package.json
+{
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  }
+}
+```
+
+## 결론
+
+이 가이드에서 제시한 TypeScript 설정과 타입 패턴을 활용하면:
+
+1. **컴파일 타임 에러 최소화**: 타입 불일치를 사전에 방지
+2. **런타임 안전성 향상**: 잘못된 데이터 구조로 인한 오류 감소
+3. **코드 가독성 개선**: 타입 정보로 코드 의도 명확화
+4. **리팩토링 안전성**: 타입 변경 시 영향 범위 자동 감지
+5. **개발자 경험 향상**: IDE 자동완성과 타입 힌트 제공
+
+특히 tagged union과 branded types를 활용하면 광고 시스템과 같은 복잡한 도메인 모델에서도 높은 수준의 타입 안전성을 달성할 수 있습니다.
+
+## 적용된 프로젝트
+
+- ✅ **@workspace/typescript-config**: 엄격한 TypeScript 설정
+- ✅ **@workspace/ui**: 타입 가드와 유틸리티 타입 구현
+- ✅ **web**: 타입 안전한 광고 시스템 구현
+- ✅ **전체 프로젝트**: TypeScript 에러 0개 달성
+  description:
+  globs:
+  alwaysApply: false
+
+---
