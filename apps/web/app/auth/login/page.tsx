@@ -13,62 +13,30 @@ import {
 } from "@workspace/ui/components/card";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/supabase";
 import { useRouter } from "next/navigation";
-import { getAuthRedirectUrl } from "@/lib/supabase/auth-helpers";
+import { useAuthActions } from "@workspace/supabase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
+  const { loading, error, signInWithPassword, signInWithOAuth, clearError } =
+    useAuthActions();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    clearError();
 
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        router.push("/");
-        router.refresh();
-      }
-    } catch {
-      setError("로그인 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
+    const success = await signInWithPassword(email, password);
+    if (success) {
+      router.push("/");
+      router.refresh();
     }
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: getAuthRedirectUrl(),
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-      }
-    } catch {
-      setError("Google 로그인 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
+    clearError();
+    await signInWithOAuth("google");
   };
 
   return (

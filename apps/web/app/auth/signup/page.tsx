@@ -13,78 +13,41 @@ import {
 } from "@workspace/ui/components/card";
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/supabase";
 import { useRouter } from "next/navigation";
-import { getAuthRedirectUrl } from "@/lib/supabase/auth-helpers";
+import { useAuthActions } from "@workspace/supabase";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const { loading, error, signUp, signInWithOAuth, clearError } =
+    useAuthActions();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    clearError();
 
     if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      setLoading(false);
+      // 에러 처리는 useAuthActions에서 관리되므로 여기서는 단순히 return
       return;
     }
 
     if (password.length < 6) {
-      setError("비밀번호는 최소 6자 이상이어야 합니다.");
-      setLoading(false);
+      // 에러 처리는 useAuthActions에서 관리되므로 여기서는 단순히 return
       return;
     }
 
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: getAuthRedirectUrl(),
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess(true);
-      }
-    } catch {
-      setError("회원가입 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
+    const success = await signUp(email, password);
+    if (success) {
+      setSuccess(true);
     }
   };
 
   const handleGoogleSignup = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: getAuthRedirectUrl(),
-        },
-      });
-
-      if (error) {
-        setError(error.message);
-      }
-    } catch {
-      setError("Google 회원가입 중 오류가 발생했습니다.");
-    } finally {
-      setLoading(false);
-    }
+    clearError();
+    await signInWithOAuth("google");
   };
 
   if (success) {
