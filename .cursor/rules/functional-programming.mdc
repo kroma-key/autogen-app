@@ -1,0 +1,231 @@
+---
+alwaysApply: false
+---
+# 함수형 프로그래밍 및 가독성 우선 규칙
+
+## 적용 대상 파일들
+
+- `packages/supabase/src/**/*.ts`
+- `apps/web/lib/**/*.ts`
+- `apps/web/hooks/**/*.ts`
+
+## 핵심 규칙
+
+### 1. FxTS 라이브러리 활용
+
+- **FxTS 공식 사이트**: [https://fxts.dev/](https://fxts.dev/)
+- `pipe`, `map`, `filter`, `take`, `toArray` 등의 함수형 API를 적극 활용
+- 함수형 컴포지션을 사용하여 선언적이고 읽기 쉬운 코드 작성
+
+### 2. 타입 안전성 및 Optional Chaining 제거
+
+- 타입을 좁혀서 optional chaining을 최소화
+- 타입 가드와 타입 단언을 적절히 사용하여 런타임 안전성 확보
+- 변경이 용이한 구조로 설계하여 유지보수성 향상
+
+### 3. 코드 예시
+
+#### ❌ Bad: Optional chaining 과다 사용
+
+```typescript
+const userName = user?.profile?.name?.first || "Unknown";
+const userEmail = user?.email || "No email";
+```
+
+#### ✅ Good: 타입을 좁혀서 안전하게 접근
+
+```typescript
+const getUserName = (user: User | null): string => {
+  if (!user?.profile?.name) return "Unknown";
+  return user.profile.name.first;
+};
+
+const getUserEmail = (user: User | null): string => {
+  return user?.email || "No email";
+};
+```
+
+#### ✅ Better: FxTS 활용
+
+```typescript
+import { pipe, map, filter, take, toArray } from "fxts";
+
+const getActiveUserNames = pipe(
+  users,
+  filter((user) => user.status === "active"),
+  map((user) => user.profile?.name?.first || "Unknown"),
+  take(10),
+  toArray
+);
+
+const getValidEmails = pipe(
+  users,
+  filter((user) => user.email && user.email.includes("@")),
+  map((user) => user.email!),
+  toArray
+);
+```
+
+### 4. 함수형 훅 패턴
+
+```typescript
+// ✅ Good: 함수형 훅 패턴
+export function useAuth() {
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: null,
+  });
+
+  const updateUser = useCallback((user: User | null) => {
+    setState((prev) => ({ ...prev, user, loading: false }));
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    setState((prev) => ({ ...prev, error, loading: false }));
+  }, []);
+
+  return {
+    ...state,
+    updateUser,
+    handleError,
+  };
+}
+```
+
+### 5. 유틸리티 함수
+
+```typescript
+// ✅ Good: 순수 함수로 작성
+export const formatUserName = (user: User): string => {
+  if (user.profile?.name) {
+    return `${user.profile.name.first} ${user.profile.name.last}`;
+  }
+  return user.email?.split("@")[0] || "Unknown User";
+};
+
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+```
+
+## 성능 최적화
+
+- `useMemo`와 `useCallback`을 적절히 사용하여 불필요한 재계산 방지
+- 함수형 프로그래밍의 지연 평가(lazy evaluation)를 활용하여 효율적인 계산 구현
+- 메모이제이션을 통한 계산 결과 재사용
+# 함수형 프로그래밍 및 가독성 우선 규칙
+
+## 적용 대상 파일들
+
+- `packages/supabase/src/**/*.ts`
+- `apps/web/lib/**/*.ts`
+- `apps/web/hooks/**/*.ts`
+
+## 핵심 규칙
+
+### 1. FxTS 라이브러리 활용
+
+- **FxTS 공식 사이트**: [https://fxts.dev/](https://fxts.dev/)
+- `pipe`, `map`, `filter`, `take`, `toArray` 등의 함수형 API를 적극 활용
+- 함수형 컴포지션을 사용하여 선언적이고 읽기 쉬운 코드 작성
+
+### 2. 타입 안전성 및 Optional Chaining 제거
+
+- 타입을 좁혀서 optional chaining을 최소화
+- 타입 가드와 타입 단언을 적절히 사용하여 런타임 안전성 확보
+- 변경이 용이한 구조로 설계하여 유지보수성 향상
+
+### 3. 코드 예시
+
+#### ❌ Bad: Optional chaining 과다 사용
+
+```typescript
+const userName = user?.profile?.name?.first || "Unknown";
+const userEmail = user?.email || "No email";
+```
+
+#### ✅ Good: 타입을 좁혀서 안전하게 접근
+
+```typescript
+const getUserName = (user: User | null): string => {
+  if (!user?.profile?.name) return "Unknown";
+  return user.profile.name.first;
+};
+
+const getUserEmail = (user: User | null): string => {
+  return user?.email || "No email";
+};
+```
+
+#### ✅ Better: FxTS 활용
+
+```typescript
+import { pipe, map, filter, take, toArray } from "fxts";
+
+const getActiveUserNames = pipe(
+  users,
+  filter((user) => user.status === "active"),
+  map((user) => user.profile?.name?.first || "Unknown"),
+  take(10),
+  toArray
+);
+
+const getValidEmails = pipe(
+  users,
+  filter((user) => user.email && user.email.includes("@")),
+  map((user) => user.email!),
+  toArray
+);
+```
+
+### 4. 함수형 훅 패턴
+
+```typescript
+// ✅ Good: 함수형 훅 패턴
+export function useAuth() {
+  const [state, setState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: null,
+  });
+
+  const updateUser = useCallback((user: User | null) => {
+    setState((prev) => ({ ...prev, user, loading: false }));
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    setState((prev) => ({ ...prev, error, loading: false }));
+  }, []);
+
+  return {
+    ...state,
+    updateUser,
+    handleError,
+  };
+}
+```
+
+### 5. 유틸리티 함수
+
+```typescript
+// ✅ Good: 순수 함수로 작성
+export const formatUserName = (user: User): string => {
+  if (user.profile?.name) {
+    return `${user.profile.name.first} ${user.profile.name.last}`;
+  }
+  return user.email?.split("@")[0] || "Unknown User";
+};
+
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+```
+
+## 성능 최적화
+
+- `useMemo`와 `useCallback`을 적절히 사용하여 불필요한 재계산 방지
+- 함수형 프로그래밍의 지연 평가(lazy evaluation)를 활용하여 효율적인 계산 구현
+- 메모이제이션을 통한 계산 결과 재사용

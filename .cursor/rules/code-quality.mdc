@@ -1,0 +1,549 @@
+---
+alwaysApply: false
+---
+# 공통 코드 품질 기준
+
+## 모든 파일에 적용되는 기준
+
+### 1. 가독성 (Readability)
+
+#### 함수명과 변수명
+
+- **명확하고 의도를 드러내게** 작성
+- **한글과 영어를 적절히 혼용**하여 의미 전달 명확화
+- **일관된 네이밍 컨벤션** 사용
+
+```typescript
+// ✅ Good: 명확한 의도
+const getUserProfile = (userId: string) => { ... };
+const isUserLoggedIn = (user: User | null) => { ... };
+const handleUserLogin = async (credentials: LoginCredentials) => { ... };
+
+// ❌ Bad: 모호한 의도
+const getData = (id: string) => { ... };
+const check = (user: User | null) => { ... };
+const doSomething = async (data: any) => { ... };
+```
+
+#### 복잡한 로직 분리
+
+- **복잡한 로직은 작은 함수로 분리**하여 이해하기 쉽게 작성
+- **단일 책임 원칙**을 따르는 함수 설계
+- **주석보다는 자체 문서화되는 코드** 작성
+
+```typescript
+// ✅ Good: 작은 함수로 분리
+const validateUserInput = (input: UserInput): ValidationResult => {
+  const emailValidation = validateEmail(input.email);
+  const passwordValidation = validatePassword(input.password);
+  const nameValidation = validateName(input.name);
+
+  return combineValidations([
+    emailValidation,
+    passwordValidation,
+    nameValidation,
+  ]);
+};
+
+const validateEmail = (email: string): ValidationResult => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return {
+    isValid: emailRegex.test(email),
+    error: emailRegex.test(email) ? null : "유효하지 않은 이메일 형식입니다.",
+  };
+};
+
+// ❌ Bad: 모든 로직을 하나의 함수에
+const validateEverything = (input: UserInput): ValidationResult => {
+  // 50줄 이상의 복잡한 검증 로직...
+};
+```
+
+### 2. 타입 안전성 (Type Safety)
+
+#### TypeScript 활용
+
+- **TypeScript의 강력한 타입 시스템을 활용**하여 런타임 에러 방지
+- **제네릭과 유니온 타입을 적극 활용**하여 유연하면서도 안전한 코드 작성
+- **any 타입 사용 금지**, 명시적 타입 정의
+
+```typescript
+// ✅ Good: 강력한 타입 시스템 활용
+interface ApiResponse<T> {
+  data: T;
+  status: "success" | "error";
+  message?: string;
+}
+
+const fetchUserData = async <T>(userId: string): Promise<ApiResponse<T>> => {
+  try {
+    const response = await api.get(`/users/${userId}`);
+    return {
+      data: response.data,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      data: null as T,
+      status: "error",
+      message: error instanceof Error ? error.message : "알 수 없는 오류",
+    };
+  }
+};
+
+// ❌ Bad: any 타입 사용
+const fetchUserData = async (userId: string): Promise<any> => {
+  const response = await api.get(`/users/${userId}`);
+  return response.data;
+};
+```
+
+#### 타입 가드 활용
+
+```typescript
+// ✅ Good: 타입 가드 활용
+const isUser = (value: unknown): value is User => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "email" in value &&
+    "name" in value
+  );
+};
+
+const processUserData = (data: unknown) => {
+  if (isUser(data)) {
+    // 여기서는 data가 User 타입으로 좁혀짐
+    console.log(data.email); // 타입 안전
+  }
+};
+```
+
+### 3. 성능 (Performance)
+
+#### React 최적화
+
+- **불필요한 리렌더링을 방지**하기 위해 React.memo, useMemo, useCallback을 적절히 사용
+- **의존성 배열을 정확하게 관리**하여 무한 루프 방지
+
+```typescript
+// ✅ Good: React 최적화 훅 활용
+export function UserList({ users, onUserSelect }: UserListProps) {
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => a.name.localeCompare(b.name));
+  }, [users]);
+
+  const handleUserSelect = useCallback((userId: string) => {
+    onUserSelect(userId);
+  }, [onUserSelect]);
+
+  return (
+    <div>
+      {sortedUsers.map(user => (
+        <UserItem
+          key={user.id}
+          user={user}
+          onSelect={handleUserSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ❌ Bad: 매번 새로운 함수 생성
+export function UserList({ users, onUserSelect }: UserListProps) {
+  return (
+    <div>
+      {users.map(user => (
+        <UserItem
+          key={user.id}
+          user={user}
+          onSelect={(userId) => onUserSelect(userId)} // 매번 새로운 함수
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+#### 함수형 프로그래밍의 지연 평가
+
+```typescript
+// ✅ Good: 지연 평가 활용
+import { pipe, map, filter, take, toArray } from "fxts";
+
+const getTopUsers = pipe(
+  users,
+  filter((user) => user.status === "active"),
+  map((user) => ({
+    ...user,
+    score: calculateUserScore(user),
+  })),
+  filter((user) => user.score > 100),
+  take(10),
+  toArray
+);
+
+// ❌ Bad: 즉시 평가로 인한 성능 저하
+const topUsers = users
+  .filter((user) => user.status === "active")
+  .map((user) => ({
+    ...user,
+    score: calculateUserScore(user),
+  }))
+  .filter((user) => user.score > 100)
+  .slice(0, 10);
+```
+
+### 4. 에러 처리 (Error Handling)
+
+#### 일관된 에러 처리 패턴
+
+```typescript
+// ✅ Good: 일관된 에러 처리
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+const handleApiError = (error: unknown): ApiError => {
+  if (error instanceof ApiError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return new ApiError(error.message, 500);
+  }
+
+  return new ApiError("알 수 없는 오류가 발생했습니다.", 500);
+};
+
+// ❌ Bad: 일관성 없는 에러 처리
+const handleApiError = (error: any) => {
+  if (error.response) {
+    console.error(error.response.data);
+  } else if (error.request) {
+    console.error("요청 실패");
+  } else {
+    console.error("오류 발생");
+  }
+};
+```
+
+### 5. 테스트 가능성 (Testability)
+
+#### 순수 함수 작성
+
+```typescript
+// ✅ Good: 테스트하기 쉬운 순수 함수
+export const calculateDiscount = (
+  price: number,
+  discountRate: number,
+  isVip: boolean
+): number => {
+  const baseDiscount = price * (discountRate / 100);
+  const vipBonus = isVip ? baseDiscount * 0.1 : 0;
+  return Math.max(0, baseDiscount + vipBonus);
+};
+
+// ❌ Bad: 외부 의존성이 있는 함수
+export const calculateDiscount = async (
+  price: number,
+  userId: string
+): Promise<number> => {
+  const user = await getUserFromDatabase(userId);
+  const discountRate = await getDiscountRateFromConfig();
+  // ... 복잡한 로직
+};
+```
+
+## 코드 리뷰 체크리스트
+
+- [ ] 함수명과 변수명이 명확한가?
+- [ ] 복잡한 로직이 작은 함수로 분리되었는가?
+- [ ] TypeScript 타입이 적절히 정의되었는가?
+- [ ] any 타입을 사용하지 않았는가?
+- [ ] React 최적화 훅을 적절히 사용했는가?
+- [ ] 에러 처리가 일관되게 구현되었는가?
+- [ ] 테스트하기 쉬운 구조인가?
+- [ ] 주석보다는 자체 문서화되는 코드인가?
+# 공통 코드 품질 기준
+
+## 모든 파일에 적용되는 기준
+
+### 1. 가독성 (Readability)
+
+#### 함수명과 변수명
+
+- **명확하고 의도를 드러내게** 작성
+- **한글과 영어를 적절히 혼용**하여 의미 전달 명확화
+- **일관된 네이밍 컨벤션** 사용
+
+```typescript
+// ✅ Good: 명확한 의도
+const getUserProfile = (userId: string) => { ... };
+const isUserLoggedIn = (user: User | null) => { ... };
+const handleUserLogin = async (credentials: LoginCredentials) => { ... };
+
+// ❌ Bad: 모호한 의도
+const getData = (id: string) => { ... };
+const check = (user: User | null) => { ... };
+const doSomething = async (data: any) => { ... };
+```
+
+#### 복잡한 로직 분리
+
+- **복잡한 로직은 작은 함수로 분리**하여 이해하기 쉽게 작성
+- **단일 책임 원칙**을 따르는 함수 설계
+- **주석보다는 자체 문서화되는 코드** 작성
+
+```typescript
+// ✅ Good: 작은 함수로 분리
+const validateUserInput = (input: UserInput): ValidationResult => {
+  const emailValidation = validateEmail(input.email);
+  const passwordValidation = validatePassword(input.password);
+  const nameValidation = validateName(input.name);
+
+  return combineValidations([
+    emailValidation,
+    passwordValidation,
+    nameValidation,
+  ]);
+};
+
+const validateEmail = (email: string): ValidationResult => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return {
+    isValid: emailRegex.test(email),
+    error: emailRegex.test(email) ? null : "유효하지 않은 이메일 형식입니다.",
+  };
+};
+
+// ❌ Bad: 모든 로직을 하나의 함수에
+const validateEverything = (input: UserInput): ValidationResult => {
+  // 50줄 이상의 복잡한 검증 로직...
+};
+```
+
+### 2. 타입 안전성 (Type Safety)
+
+#### TypeScript 활용
+
+- **TypeScript의 강력한 타입 시스템을 활용**하여 런타임 에러 방지
+- **제네릭과 유니온 타입을 적극 활용**하여 유연하면서도 안전한 코드 작성
+- **any 타입 사용 금지**, 명시적 타입 정의
+
+```typescript
+// ✅ Good: 강력한 타입 시스템 활용
+interface ApiResponse<T> {
+  data: T;
+  status: "success" | "error";
+  message?: string;
+}
+
+const fetchUserData = async <T>(userId: string): Promise<ApiResponse<T>> => {
+  try {
+    const response = await api.get(`/users/${userId}`);
+    return {
+      data: response.data,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      data: null as T,
+      status: "error",
+      message: error instanceof Error ? error.message : "알 수 없는 오류",
+    };
+  }
+};
+
+// ❌ Bad: any 타입 사용
+const fetchUserData = async (userId: string): Promise<any> => {
+  const response = await api.get(`/users/${userId}`);
+  return response.data;
+};
+```
+
+#### 타입 가드 활용
+
+```typescript
+// ✅ Good: 타입 가드 활용
+const isUser = (value: unknown): value is User => {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    "email" in value &&
+    "name" in value
+  );
+};
+
+const processUserData = (data: unknown) => {
+  if (isUser(data)) {
+    // 여기서는 data가 User 타입으로 좁혀짐
+    console.log(data.email); // 타입 안전
+  }
+};
+```
+
+### 3. 성능 (Performance)
+
+#### React 최적화
+
+- **불필요한 리렌더링을 방지**하기 위해 React.memo, useMemo, useCallback을 적절히 사용
+- **의존성 배열을 정확하게 관리**하여 무한 루프 방지
+
+```typescript
+// ✅ Good: React 최적화 훅 활용
+export function UserList({ users, onUserSelect }: UserListProps) {
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => a.name.localeCompare(b.name));
+  }, [users]);
+
+  const handleUserSelect = useCallback((userId: string) => {
+    onUserSelect(userId);
+  }, [onUserSelect]);
+
+  return (
+    <div>
+      {sortedUsers.map(user => (
+        <UserItem
+          key={user.id}
+          user={user}
+          onSelect={handleUserSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ❌ Bad: 매번 새로운 함수 생성
+export function UserList({ users, onUserSelect }: UserListProps) {
+  return (
+    <div>
+      {users.map(user => (
+        <UserItem
+          key={user.id}
+          user={user}
+          onSelect={(userId) => onUserSelect(userId)} // 매번 새로운 함수
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+#### 함수형 프로그래밍의 지연 평가
+
+```typescript
+// ✅ Good: 지연 평가 활용
+import { pipe, map, filter, take, toArray } from "fxts";
+
+const getTopUsers = pipe(
+  users,
+  filter((user) => user.status === "active"),
+  map((user) => ({
+    ...user,
+    score: calculateUserScore(user),
+  })),
+  filter((user) => user.score > 100),
+  take(10),
+  toArray
+);
+
+// ❌ Bad: 즉시 평가로 인한 성능 저하
+const topUsers = users
+  .filter((user) => user.status === "active")
+  .map((user) => ({
+    ...user,
+    score: calculateUserScore(user),
+  }))
+  .filter((user) => user.score > 100)
+  .slice(0, 10);
+```
+
+### 4. 에러 처리 (Error Handling)
+
+#### 일관된 에러 처리 패턴
+
+```typescript
+// ✅ Good: 일관된 에러 처리
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+const handleApiError = (error: unknown): ApiError => {
+  if (error instanceof ApiError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return new ApiError(error.message, 500);
+  }
+
+  return new ApiError("알 수 없는 오류가 발생했습니다.", 500);
+};
+
+// ❌ Bad: 일관성 없는 에러 처리
+const handleApiError = (error: any) => {
+  if (error.response) {
+    console.error(error.response.data);
+  } else if (error.request) {
+    console.error("요청 실패");
+  } else {
+    console.error("오류 발생");
+  }
+};
+```
+
+### 5. 테스트 가능성 (Testability)
+
+#### 순수 함수 작성
+
+```typescript
+// ✅ Good: 테스트하기 쉬운 순수 함수
+export const calculateDiscount = (
+  price: number,
+  discountRate: number,
+  isVip: boolean
+): number => {
+  const baseDiscount = price * (discountRate / 100);
+  const vipBonus = isVip ? baseDiscount * 0.1 : 0;
+  return Math.max(0, baseDiscount + vipBonus);
+};
+
+// ❌ Bad: 외부 의존성이 있는 함수
+export const calculateDiscount = async (
+  price: number,
+  userId: string
+): Promise<number> => {
+  const user = await getUserFromDatabase(userId);
+  const discountRate = await getDiscountRateFromConfig();
+  // ... 복잡한 로직
+};
+```
+
+## 코드 리뷰 체크리스트
+
+- [ ] 함수명과 변수명이 명확한가?
+- [ ] 복잡한 로직이 작은 함수로 분리되었는가?
+- [ ] TypeScript 타입이 적절히 정의되었는가?
+- [ ] any 타입을 사용하지 않았는가?
+- [ ] React 최적화 훅을 적절히 사용했는가?
+- [ ] 에러 처리가 일관되게 구현되었는가?
+- [ ] 테스트하기 쉬운 구조인가?
+- [ ] 주석보다는 자체 문서화되는 코드인가?
