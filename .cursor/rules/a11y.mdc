@@ -1,0 +1,97 @@
+---
+alwaysApply: false
+---
+
+## ✅ Rules
+
+### 1. Interactive Elements → `cursor: pointer`
+
+Applies to:
+
+- Native interactive elements: `button`, `a[href]`, `input[type="checkbox"]`, etc.
+- ARIA roles: `role="button"`, `role="link"`, `role="switch"`, etc.
+
+```css
+button,
+[role="button"],
+a[href],
+[role="link"],
+input[type="checkbox"],
+input[type="radio"],
+[role="switch"],
+[role="tab"],
+[role="menuitem"],
+[role="option"],
+[role="treeitem"] {
+  cursor: pointer;
+}
+```
+
+---
+
+### 2. Disabled States → `cursor: not-allowed`
+
+- Native attributes: `disabled`
+- ARIA attribute: `aria-disabled="true"`
+
+```css
+button[disabled],
+[aria-disabled="true"],
+input[disabled],
+select[disabled],
+textarea[disabled] {
+  cursor: not-allowed;
+}
+```
+
+---
+
+### 3. Keyboard Focus Styles
+
+- Must always be visible for **keyboard-only** users.
+- Uses `:focus-visible` for modern browsers.
+
+```css
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+
+:focus {
+  outline: none; /* avoid double outlines */
+}
+```
+
+---
+
+### 4. Hover Feedback (Optional Enhancement)
+
+- Subtle brightness change for hoverable elements.
+
+```css
+button:hover:not([disabled]),
+[role="button"]:hover:not([aria-disabled="true"]),
+a[href]:hover,
+[role="link"]:hover {
+  filter: brightness(0.95);
+  transition: filter 0.15s ease-in-out;
+}
+```
+
+---
+
+## 🔗 Integration with shadcn/ui
+
+- All `Button`, `Link`, `Switch`, `Tabs`, `DropdownMenu` components  
+  already use the correct `role` and `aria-*` attributes.
+- Adding these cursor rules guarantees **visual + interactive consistency**  
+  across both native elements and custom UI components.
+
+---
+
+## 📌 Best Practices
+
+1. Always combine **cursor rules** with **focus styles**.
+2. Do not rely on cursor changes alone—screen readers need `aria-*`.
+3. Disabled elements should _never_ be focusable or clickable.
