@@ -14,7 +14,7 @@ import {
 import { Alert, AlertDescription } from "@workspace/ui/components/alert";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuthActions } from "@workspace/supabase";
+import { useAuthActions } from "@/hooks/supabase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

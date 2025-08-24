@@ -53,9 +53,6 @@ importers:
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@workspace/supabase':
-        specifier: workspace:*
-        version: link:../../packages/supabase
       '@workspace/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -144,22 +141,6 @@ importers:
       typescript-eslint:
         specifier: ^8.39.0
         version: 8.39.0(eslint@9.32.0(jiti@2.5.1))(typescript@5.9.2)
-
-  packages/supabase:
-    dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.55.0
-        version: 2.55.0
-      react:
-        specifier: ^19.1.1
-        version: 19.1.1
-    devDependencies:
-      '@types/react':
-        specifier: ^19.1.9
-        version: 19.1.9
-      typescript:
-        specifier: ^5.9.2
-        version: 5.9.2
 
   packages/typescript-config: {}
 

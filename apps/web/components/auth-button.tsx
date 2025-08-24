@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@workspace/ui/components/button";
-import { useAuth, useUserProfile } from "@workspace/supabase";
+import { useAuth, useUserProfile } from "@/hooks/supabase";
 import Link from "next/link";
 
 export default function AuthButton() {

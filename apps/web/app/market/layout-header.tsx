@@ -16,7 +16,7 @@ import {
 } from "@workspace/ui/components/breadcrumb";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@workspace/supabase";
+import { useAuth } from "@/hooks/supabase";
 
 export function SiteHeader() {
   const pathname = usePathname();

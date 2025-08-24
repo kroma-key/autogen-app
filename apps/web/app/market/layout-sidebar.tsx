@@ -13,7 +13,7 @@ import {
   IconLogout,
   IconUser,
 } from "@tabler/icons-react";
-import { useAuth, useUserProfile } from "@workspace/supabase";
+import { useAuth, useUserProfile } from "@/hooks/supabase";
 
 import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
