@@ -1,0 +1,98 @@
+{
+  "app_name": "Study Cafe",
+  "timer": "Timer",
+  "community": "Community",
+  "profile": "Profile",
+  "ranking": "Ranking",
+  "ranking_periods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "by_exam": "By Exam"
+  },
+  "store": "Store",
+  "settings": "Settings",
+  "edit_profile": "Edit Profile",
+  "current_subject": "Current Subject",
+  "total_study_time": "Total Study Time",
+  "streak": "Streak",
+  "rank": "Rank",
+  "study_room": "Study Room",
+  "studying": "studying",
+  "achievement_badges": "Achievement Badges",
+  "study_activity": "Study Activity",
+  "unlock_premium": "Unlock Premium",
+  "get_unlimited_access": "Get unlimited access to all features",
+  "flame_points": "Flame Points",
+  "earn_by_studying": "Earn by studying",
+  "popular": "Popular",
+  "bonus": "Bonus",
+  "purchase": "Purchase",
+  "popular_study_notes": "Popular Study Notes",
+  "theme_customization": "Theme Customization",
+  "preview": "Preview",
+  "points": "Points",
+  "sales": "sales",
+  "month": "month",
+  "days": "days",
+  "total": "Total",
+  "subjects": {
+    "math": "Math",
+    "english": "English",
+    "science": "Science",
+    "history": "History",
+    "mathematics": "Mathematics",
+    "chemistry": "Chemistry",
+    "physics": "Physics",
+    "literature": "Literature"
+  },
+  "study_notes": {
+    "advanced_calculus": "Advanced Calculus",
+    "organic_chemistry_guide": "Organic Chemistry Guide",
+    "physics_fundamentals": "Physics Fundamentals",
+    "english_literature": "English Literature"
+  },
+  "themes": {
+    "sunset_vibes": "Sunset Vibes",
+    "ocean_breeze": "Ocean Breeze",
+    "forest_green": "Forest Green",
+    "midnight_dark": "Midnight Dark",
+    "warm_orange_gradients": "Warm orange gradients",
+    "cool_blue_tones": "Cool blue tones",
+    "natural_green_shades": "Natural green shades",
+    "dark_mode_theme": "Dark mode theme"
+  },
+  "premium_features": {
+    "unlimited_study_rooms": "Unlimited Study Rooms",
+    "advanced_analytics": "Advanced Analytics",
+    "offline_mode": "Offline Mode",
+    "custom_themes": "Custom Themes",
+    "join_any_room": "Join any study room without limits",
+    "detailed_insights": "Detailed study insights and progress tracking",
+    "study_without_internet": "Study without internet connection",
+    "access_all_themes": "Access to all premium themes"
+  },
+  "periods": {
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "by_exam": "By Exam"
+  },
+  "tabs": {
+    "all": "All",
+    "achievements": "Achievements",
+    "tips": "Tips",
+    "memes": "Memes"
+  },
+  "user_stats": {
+    "total_hours": "Total Hours",
+    "current_flame_points": "Current flame points balance: {{count}}",
+    "view_shopping_cart": "View shopping cart",
+    "subscribe_premium": "Subscribe to Premium for ₩{{price}} per month",
+    "study_notes_rating": "Study notes for {{subject}}: {{title}}, rated {{rating}} stars",
+    "theme_description": "Theme: {{name}}, {{preview}}, costs {{flamePrice}} flame points or {{price}}",
+    "purchase_flame_points": "Purchase {{points}} flame points for {{price}}",
+    "purchase_study_notes": "Purchase {{title}} for {{flamePrice}} flame points or {{price}}",
+    "preview_theme": "Preview {{name}} theme"
+  }
+}

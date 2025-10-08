@@ -1,0 +1,147 @@
+---
+description: Custom LLM.txt files used for project context and documentation
+globs: apps/**/*.tsx, apps/**/*.ts, packages/**/*.tsx, packages/**/*.ts
+alwaysApply: true
+---
+
+# Custom LLM.txt Files
+
+This project uses custom LLM.txt files to provide context-aware documentation and guidelines for specific services and libraries.
+
+## Available LLM.txt Files
+
+### 1. TossPayments Documentation
+
+- **URL**: [https://docs.tosspayments.com/llms.txt](https://docs.tosspayments.com/llms.txt)
+- **Purpose**: Provides comprehensive documentation for TossPayments integration
+- **Coverage**:
+  - Payment widget integration
+  - API reference and error codes
+  - SDK documentation (JavaScript, Android, iOS, Flutter, React Native)
+  - Best practices for payment processing
+  - Security guidelines and authentication
+  - Webhook handling and deep linking
+
+### 2. Supabase Documentation
+
+- **URL**: [https://context7.com/websites/supabase/llms.txt](https://context7.com/websites/supabase/llms.txt)
+- **Purpose**: Provides comprehensive documentation for Supabase integration
+- **Coverage**:
+  - Database operations and queries
+  - Authentication and user management
+  - Real-time subscriptions
+  - Storage and file management
+  - Edge functions and API development
+  - Security and RLS (Row Level Security)
+
+## Usage Guidelines
+
+### When to Reference These Files
+
+1. **Payment Integration**: When working with payment-related features, refer to TossPayments documentation for:
+   - Proper API integration patterns
+   - Error handling best practices
+   - Security considerations
+   - Testing and development workflows
+
+2. **Database Operations**: When working with Supabase features, refer to Supabase documentation for:
+   - Database schema design
+   - Query optimization
+   - Authentication flows
+   - Real-time data synchronization
+
+### Integration Patterns
+
+#### TossPayments Integration
+
+```typescript
+// Example: Payment widget integration following TossPayments best practices
+import { loadTossPayments } from "@tosspayments/payment-sdk";
+
+const tossPayments = loadTossPayments("test_ck_...");
+
+// Follow the patterns documented in TossPayments LLM.txt
+const handlePayment = async (orderId: string, amount: number) => {
+  try {
+    await tossPayments.requestPayment("카드", {
+      amount,
+      orderId,
+      orderName: "테스트 주문",
+      customerName: "홍길동",
+      successUrl: `${window.location.origin}/success`,
+      failUrl: `${window.location.origin}/fail`,
+    });
+  } catch (error) {
+    // Handle errors according to TossPayments documentation
+    console.error("Payment failed:", error);
+  }
+};
+```
+
+#### Supabase Integration
+
+```typescript
+// Example: Supabase client setup following best practices
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Follow the patterns documented in Supabase LLM.txt
+const fetchUserData = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching user:", error);
+    return null;
+  }
+
+  return data;
+};
+```
+
+## Best Practices
+
+### 1. Always Reference Documentation
+
+- Before implementing any feature related to these services, consult the respective LLM.txt files
+- Follow the documented patterns and best practices
+- Use the provided examples as templates for your implementation
+
+### 2. Error Handling
+
+- Implement proper error handling as documented in each service's LLM.txt
+- Use the recommended error codes and messages
+- Follow the suggested retry and fallback strategies
+
+### 3. Security Considerations
+
+- Follow security guidelines from both TossPayments and Supabase documentation
+- Implement proper authentication and authorization
+- Use environment variables for sensitive configuration
+
+### 4. Testing
+
+- Use the testing approaches recommended in each service's documentation
+- Implement proper mocking for development and testing environments
+- Follow the suggested testing patterns for payment flows and database operations
+
+## Maintenance
+
+### Updating Documentation
+
+- Regularly check for updates to these LLM.txt files
+- Update project documentation when new features or best practices are added
+- Ensure team members are aware of changes to these external documentation sources
+
+### Version Compatibility
+
+- Keep track of SDK versions used in the project
+- Update documentation references when upgrading to new versions
+- Test compatibility when updating service integrations

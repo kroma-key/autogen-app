@@ -1,5 +1,5 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
 
 # 함수형 프로그래밍 및 가독성 우선 규칙

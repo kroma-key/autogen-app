@@ -1,0 +1,423 @@
+---
+description: React development guidelines focusing on DRY principles and extensible type patterns
+globs: apps/**/*.tsx, apps/**/*.ts, packages/**/*.tsx, packages/**/*.ts
+alwaysApply: true
+---
+
+# React Development Guidelines
+
+## Core Principles
+
+### 1. DRY (Don't Repeat Yourself) Principle
+
+- **Never write the same code more than 2 times**
+- **Extract common patterns into reusable components, hooks, or utilities**
+- **Use composition over inheritance for component reuse**
+
+#### ❌ Bad: Repeated Code
+
+```tsx
+// Component 1
+function UserCard({ user }: { user: User }) {
+  return (
+    <div className="p-4 border rounded">
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+      <button onClick={() => editUser(user.id)}>Edit</button>
+    </div>
+  );
+}
+
+// Component 2 - Same pattern repeated
+function ProductCard({ product }: { product: Product }) {
+  return (
+    <div className="p-4 border rounded">
+      <h3>{product.name}</h3>
+      <p>{product.description}</p>
+      <button onClick={() => editProduct(product.id)}>Edit</button>
+    </div>
+  );
+}
+```
+
+#### ✅ Good: Extracted Common Pattern
+
+```tsx
+// Generic card component
+interface CardProps<T> {
+  item: T;
+  title: (item: T) => string;
+  subtitle: (item: T) => string;
+  onEdit: (item: T) => void;
+}
+
+function Card<T>({ item, title, subtitle, onEdit }: CardProps<T>) {
+  return (
+    <div className="p-4 border rounded">
+      <h3>{title(item)}</h3>
+      <p>{subtitle(item)}</p>
+      <button onClick={() => onEdit(item)}>Edit</button>
+    </div>
+  );
+}
+
+// Specific implementations
+function UserCard({ user }: { user: User }) {
+  return (
+    <Card
+      item={user}
+      title={(u) => u.name}
+      subtitle={(u) => u.email}
+      onEdit={(u) => editUser(u.id)}
+    />
+  );
+}
+
+function ProductCard({ product }: { product: Product }) {
+  return (
+    <Card
+      item={product}
+      title={(p) => p.name}
+      subtitle={(p) => p.description}
+      onEdit={(p) => editProduct(p.id)}
+    />
+  );
+}
+```
+
+### 2. Extensible Interface Design
+
+- **Use Tagged Unions (Sum Types) over Product Types**
+- **Design interfaces that can expand as business logic changes**
+- **Prefer composition and branded types for type safety**
+
+#### Tagged Union Pattern
+
+```tsx
+// ❌ Bad: Product type (rigid structure)
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  permissions: string[];
+}
+
+// ✅ Good: Tagged union (extensible)
+type UserRole =
+  | { type: "admin"; permissions: AdminPermission[] }
+  | { type: "user"; preferences: UserPreferences }
+  | { type: "guest"; sessionId: string }
+  | { type: "moderator"; moderationLevel: number };
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+// Usage with type narrowing
+function renderUserActions(user: User) {
+  switch (user.role.type) {
+    case "admin":
+      return <AdminPanel permissions={user.role.permissions} />;
+    case "user":
+      return <UserDashboard preferences={user.role.preferences} />;
+    case "moderator":
+      return <ModerationTools level={user.role.moderationLevel} />;
+    case "guest":
+      return <GuestWelcome sessionId={user.role.sessionId} />;
+  }
+}
+```
+
+#### Branded Types for Type Safety
+
+```tsx
+// Branded types to prevent mixing similar types
+type UserId = string & { readonly __brand: "UserId" };
+type ProductId = string & { readonly __brand: "ProductId" };
+type OrderId = string & { readonly __brand: "OrderId" };
+
+// Factory functions
+const createUserId = (id: string): UserId => id as UserId;
+const createProductId = (id: string): ProductId => id as ProductId;
+
+// Usage prevents accidental mixing
+function getUserById(id: UserId): User {
+  /* ... */
+}
+function getProductById(id: ProductId): Product {
+  /* ... */
+}
+
+// This would cause a TypeScript error:
+// getUserById(createProductId("123")); // Error!
+```
+
+#### Compound Pattern for Complex State
+
+```tsx
+// ❌ Bad: Multiple separate states
+function UserProfile() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+
+  // Complex state management...
+}
+
+// ✅ Good: Compound state pattern
+type UserProfileState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "success"; user: User }
+  | { status: "error"; error: string }
+  | { status: "editing"; user: User; originalUser: User };
+
+function UserProfile() {
+  const [state, setState] = useState<UserProfileState>({ status: "idle" });
+
+  // Type-safe state transitions
+  const handleEdit = (user: User) => {
+    setState({ status: "editing", user, originalUser: user });
+  };
+
+  const handleSave = async () => {
+    if (state.status !== "editing") return;
+
+    setState({ status: "loading" });
+    try {
+      const updatedUser = await saveUser(state.user);
+      setState({ status: "success", user: updatedUser });
+    } catch (error) {
+      setState({ status: "error", error: error.message });
+    }
+  };
+}
+```
+
+### 3. Component Composition Patterns
+
+#### Higher-Order Components for Cross-Cutting Concerns
+
+```tsx
+// ❌ Bad: Repeated loading logic
+function UserList() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUsers()
+      .then(setUsers)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+  return <div>{/* render users */}</div>;
+}
+
+function ProductList() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProducts()
+      .then(setProducts)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Spinner />;
+  return <div>{/* render products */}</div>;
+}
+
+// ✅ Good: Reusable data fetching hook
+function useAsyncData<T>(fetchFn: () => Promise<T>): {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+} {
+  const [state, setState] = useState<{
+    data: T | null;
+    loading: boolean;
+    error: string | null;
+  }>({ data: null, loading: true, error: null });
+
+  useEffect(() => {
+    fetchFn()
+      .then((data) => setState({ data, loading: false, error: null }))
+      .catch((error) =>
+        setState({ data: null, loading: false, error: error.message })
+      );
+  }, [fetchFn]);
+
+  return state;
+}
+
+// Usage
+function UserList() {
+  const { data: users, loading, error } = useAsyncData(fetchUsers);
+
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage error={error} />;
+  return <div>{/* render users */}</div>;
+}
+```
+
+#### Render Props Pattern for Flexible Composition
+
+```tsx
+interface DataProviderProps<T> {
+  children: (data: {
+    items: T[];
+    loading: boolean;
+    error: string | null;
+    refetch: () => void;
+  }) => React.ReactNode;
+  fetchFn: () => Promise<T[]>;
+}
+
+function DataProvider<T>({ children, fetchFn }: DataProviderProps<T>) {
+  const { data, loading, error } = useAsyncData(fetchFn);
+
+  return (
+    <>
+      {children({
+        items: data || [],
+        loading,
+        error,
+        refetch: () => fetchFn(),
+      })}
+    </>
+  );
+}
+
+// Usage with different render strategies
+function UserManagement() {
+  return (
+    <DataProvider fetchFn={fetchUsers}>
+      {({ items: users, loading, error, refetch }) => (
+        <div>
+          {loading && <Spinner />}
+          {error && <ErrorMessage error={error} />}
+          <UserTable users={users} onRefresh={refetch} />
+        </div>
+      )}
+    </DataProvider>
+  );
+}
+```
+
+### 4. Type-Safe Event Handling
+
+```tsx
+// ❌ Bad: Generic event handlers
+function Form() {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // No type safety for field names or values
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
+  };
+}
+
+// ✅ Good: Typed event handlers
+type FormField = "name" | "email" | "password";
+type FormData = Record<FormField, string>;
+
+function Form() {
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const handleFieldChange = <K extends FormField>(
+    field: K,
+    value: FormData[K]
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleInputChange =
+    (field: FormField) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleFieldChange(field, e.target.value);
+    };
+}
+```
+
+### 5. Extensible Component APIs
+
+```tsx
+// ❌ Bad: Rigid component props
+interface ButtonProps {
+  variant: "primary" | "secondary";
+  size: "small" | "medium" | "large";
+  onClick: () => void;
+}
+
+// ✅ Good: Extensible with discriminated unions
+type ButtonVariant =
+  | { type: "primary"; loading?: boolean }
+  | { type: "secondary"; disabled?: boolean }
+  | { type: "danger"; confirmText?: string }
+  | { type: "icon"; icon: React.ComponentType };
+
+interface ButtonProps {
+  variant: ButtonVariant;
+  size: "small" | "medium" | "large";
+  onClick: () => void;
+  children?: React.ReactNode;
+}
+
+function Button({ variant, size, onClick, children }: ButtonProps) {
+  const baseClasses = `btn btn-${size}`;
+
+  switch (variant.type) {
+    case "primary":
+      return (
+        <button
+          className={`${baseClasses} btn-primary`}
+          onClick={onClick}
+          disabled={variant.loading}
+        >
+          {variant.loading ? <Spinner /> : children}
+        </button>
+      );
+    case "danger":
+      return (
+        <button
+          className={`${baseClasses} btn-danger`}
+          onClick={() => {
+            if (confirm(variant.confirmText || "Are you sure?")) {
+              onClick();
+            }
+          }}
+        >
+          {children}
+        </button>
+      );
+    case "icon":
+      return (
+        <button className={`${baseClasses} btn-icon`} onClick={onClick}>
+          <variant.icon />
+        </button>
+      );
+    // ... other variants
+  }
+}
+```
+
+## Implementation Checklist
+
+- [ ] No code pattern appears more than twice
+- [ ] Interfaces use tagged unions for extensibility
+- [ ] Branded types prevent type confusion
+- [ ] Compound state patterns replace multiple useState calls
+- [ ] Components use composition over inheritance
+- [ ] Event handlers are type-safe
+- [ ] Component APIs support future expansion
+- [ ] Common logic is extracted into reusable hooks/utilities

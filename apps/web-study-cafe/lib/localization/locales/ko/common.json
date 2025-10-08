@@ -1,0 +1,98 @@
+{
+  "app_name": "스터디 카페",
+  "timer": "타이머",
+  "community": "커뮤니티",
+  "profile": "프로필",
+  "ranking": "랭킹",
+  "ranking_periods": {
+    "daily": "일간",
+    "weekly": "주간",
+    "monthly": "월간",
+    "by_exam": "시험별"
+  },
+  "store": "스토어",
+  "settings": "설정",
+  "edit_profile": "프로필 편집",
+  "current_subject": "현재 과목",
+  "total_study_time": "총 공부 시간",
+  "streak": "연속 공부",
+  "rank": "순위",
+  "study_room": "스터디룸",
+  "studying": "공부 중",
+  "achievement_badges": "성취 배지",
+  "study_activity": "공부 활동",
+  "unlock_premium": "프리미엄 잠금 해제",
+  "get_unlimited_access": "모든 기능에 무제한 액세스",
+  "flame_points": "플레임 포인트",
+  "earn_by_studying": "공부해서 획득",
+  "popular": "인기",
+  "bonus": "보너스",
+  "purchase": "구매",
+  "popular_study_notes": "인기 학습 노트",
+  "theme_customization": "테마 커스터마이징",
+  "preview": "미리보기",
+  "points": "포인트",
+  "sales": "판매",
+  "month": "월",
+  "days": "일",
+  "total": "총",
+  "subjects": {
+    "math": "수학",
+    "english": "영어",
+    "science": "과학",
+    "history": "역사",
+    "mathematics": "수학",
+    "chemistry": "화학",
+    "physics": "물리학",
+    "literature": "문학"
+  },
+  "study_notes": {
+    "advanced_calculus": "고급 미적분학",
+    "organic_chemistry_guide": "유기화학 가이드",
+    "physics_fundamentals": "물리학 기초",
+    "english_literature": "영문학"
+  },
+  "themes": {
+    "sunset_vibes": "석양 분위기",
+    "ocean_breeze": "바다 바람",
+    "forest_green": "숲의 초록",
+    "midnight_dark": "자정 다크",
+    "warm_orange_gradients": "따뜻한 오렌지 그라디언트",
+    "cool_blue_tones": "시원한 블루 톤",
+    "natural_green_shades": "자연스러운 그린 색조",
+    "dark_mode_theme": "다크 모드 테마"
+  },
+  "premium_features": {
+    "unlimited_study_rooms": "무제한 스터디룸",
+    "advanced_analytics": "고급 분석",
+    "offline_mode": "오프라인 모드",
+    "custom_themes": "커스텀 테마",
+    "join_any_room": "제한 없이 모든 스터디룸 참여",
+    "detailed_insights": "상세한 학습 인사이트 및 진행 상황 추적",
+    "study_without_internet": "인터넷 연결 없이 학습",
+    "access_all_themes": "모든 프리미엄 테마 액세스"
+  },
+  "periods": {
+    "daily": "일간",
+    "weekly": "주간",
+    "monthly": "월간",
+    "by_exam": "시험별"
+  },
+  "tabs": {
+    "all": "전체",
+    "achievements": "성취",
+    "tips": "팁",
+    "memes": "밈"
+  },
+  "user_stats": {
+    "total_hours": "총 시간",
+    "current_flame_points": "현재 플레임 포인트: {{count}}",
+    "view_shopping_cart": "장바구니 보기",
+    "subscribe_premium": "월 {{price}}로 프리미엄 구독",
+    "study_notes_rating": "{{subject}} 학습 노트: {{title}}, {{rating}}점 평가",
+    "theme_description": "테마: {{name}}, {{preview}}, {{flamePrice}} 플레임 포인트 또는 {{price}}",
+    "purchase_flame_points": "{{points}} 플레임 포인트를 {{price}}에 구매",
+    "purchase_study_notes": "{{flamePrice}} 플레임 포인트 또는 {{price}}로 {{title}} 구매",
+    "preview_theme": "{{name}} 테마 미리보기"
+  }
+}
